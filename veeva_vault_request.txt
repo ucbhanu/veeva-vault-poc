@@ -1,0 +1,137 @@
+1. Get data
+Method: GET
+URL: postman-echo.com/get
+
+Test Script:
+
+pm.test("Status code is     200", function () {    pm.response.to.have.        status(200);});
+2. Post data
+Method: POST
+URL: postman-echo.com/post
+
+Body (raw JSON):
+
+{    "name": "Add your         name in the body"}
+Test Script:
+
+pm.test("Successful POST     request", function ()     {    pm.expect(pm.response.        code).to.be.oneOf        ([200, 201]);});
+3. auth discovery
+Method: POST
+URL: https://login.veevavault.com/auth/discovery?username={{username}}
+
+Query Params:
+
+username = {{username}}
+Headers (disabled):
+
+username: efddq
+(No body, no scripts)
+
+4. get metadata
+Method: GET
+URL: https://bayer-content-factory.veevavault.com/api/v26.2/metadata/vobjects/product__v
+
+Auth: Bearer Token — {{sessionId}}
+
+(No body, no scripts)
+
+5. get doc list (copy of get metadata)
+Method: GET
+URL: https://bayer-content-factory.veevavault.com/api/v26.2/metadata/vobjects/product__v
+
+Auth: Bearer Token — {{sessionId}}
+
+(No body, no scripts)
+
+6. data query
+Method: POST
+URL: https://bayer-content-factory.veevavault.com/api/v26.2/query
+
+Headers:
+
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+Auth: Bearer Token — {{sessionId}}
+
+Body (form-urlencoded):
+
+q = SELECT id, name__v,     document_number__v,     version_number__v     FROM documents WHERE     name__v CONTAINS     ('Landing 2')
+(No scripts)
+
+7. data query Copy
+Method: POST
+URL: https://bayer-content-factory.veevavault.com/api/v26.2/query
+
+Headers:
+
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+Auth: Bearer Token — {{sessionId}}
+
+Body (form-urlencoded):
+
+q = SELECT id, name__v,     document_number__v     FROM documents WHERE     name__v CONTAINS     ('Landing 2')
+(No scripts)
+
+8. file download
+Method: GET
+URL: https://bayer-content-factory.veevavault.com/api/v26.2/objects/documents/3535856/file
+
+Headers:
+
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+Auth: Bearer Token — {{sessionId}}
+
+Body (form-urlencoded):
+
+q = SELECT id,name__v     FROM documents WHERE     name__v CONTAINS     ('Migration_test (v0.    3)')
+(No scripts)
+
+9. file download Copy
+Method: GET
+URL: https://bayer-content-factory.veevavault.com/api/v26.2/objects/documents/3535856/file
+
+Headers:
+
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+Auth: Bearer Token — {{sessionId}}
+
+Body (form-urlencoded):
+
+q = SELECT id,name__v     FROM documents WHERE     name__v CONTAINS     ('Migration_test (v0.    3)')
+(No scripts)
+
+10. file details (another copy of file download)
+Method: GET
+URL: https://bayer-content-factory.veevavault.com/api/v26.2/objects/documents/3535856/file
+
+Headers:
+
+Content-Type: application/x-www-form-urlencoded
+Accept: application/json
+Auth: Bearer Token — {{sessionId}}
+
+Body (form-urlencoded):
+
+q = SELECT id,name__v     FROM documents WHERE     name__v CONTAINS     ('Migration_test (v0.    3)')
+(No scripts)
+
+11. Veeva auth
+Method: POST
+URL: https://bayer-content-factory.veevavault.com/api/v26.2/auth
+
+Auth: No Auth
+
+Body (form-urlencoded):
+
+username = {{username}}password = {{password}}
+Test Script:
+
+var jsonData = pm.    response.json();if (jsonData.sessionId) {    pm.environment.set        ("sessionId",         jsonData.        sessionId);}
+That covers all 11 requests in the collection. The Veeva auth request is the key one — it authenticates and stores the sessionId into the environment, which is then used as a Bearer token in all subsequent requests.
+
+export all in text
+Received 401 Unauthorized response
+To export the collection as a file to your local disk, a local folder needs to be linked first. Let me open the folder picker so you can choose where to save it.
