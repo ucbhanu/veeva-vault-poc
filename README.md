@@ -184,6 +184,82 @@ The script authenticates, checks product metadata, queries `allversions document
 
 The Vault query returns no document rows when the search text does not match. Choose the search text supplied by the business team and confirm the query results before proceeding.
 
+### Vault API reference
+
+The downloader uses Vault API `v26.2` and sends requests through `VEEVA_PROXY` when configured.
+
+#### 1. Authenticate
+
+```http
+POST https://sbbayer-uat.veevavault.com/api/v26.2/auth
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+
+username=<Veeva username>&password=<Veeva password>
+```
+
+The response contains `sessionId`, `vaultId`, and `vaultIds[].url`. The downloader does not display or persist the session ID. It selects the API URL for the returned `vaultId` and uses that URL for subsequent requests. This is important because a session authenticated through a discovery or Stage URL may be bound to the Vault API host returned in the authentication response.
+
+#### 2. Validate metadata
+
+```http
+GET {vault_api_url}/v26.2/metadata/vobjects/product__v
+Authorization: <sessionId>
+Accept: application/json
+```
+
+The request must return `responseStatus=SUCCESS` before document retrieval continues.
+
+#### 3. Query all document versions
+
+```http
+POST {vault_api_url}/v26.2/query
+Authorization: <sessionId>
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+
+q=SELECT id, name__v, filename__v, document_number__v,
+major_version_number__v, minor_version_number__v
+FROM allversions documents
+WHERE name__v CONTAINS ('<search text>')
+```
+
+The downloader records these fields:
+
+| Field | Use |
+|---|---|
+| `id` | Document resource identifier for file retrieval. |
+| `name__v` | Document name returned by the search. |
+| `filename__v` | Original Vault filename used as the local filename fallback. |
+| `document_number__v` | Folder and delivery document number. |
+| `major_version_number__v` | Major version path component. |
+| `minor_version_number__v` | Minor version path component. |
+
+Vault can return `responseStatus=WARNING` with valid data, for example when a duplicate query is detected. The downloader accepts both `SUCCESS` and `WARNING` when data is present.
+
+#### 4. Download a specific version
+
+```http
+GET {vault_api_url}/v26.2/objects/documents/{id}/versions/{major}/{minor}/file
+Authorization: <sessionId>
+```
+
+Binary content is written to:
+
+```text
+input/<document_number>/Source/<document_number>_v<major>.<minor>_<filename>
+```
+
+JSON responses from this endpoint are treated as Vault errors and recorded in `veeva_download_manifest.csv`. Common causes include missing content files and insufficient `Download Source` permission for the document lifecycle/status.
+
+#### API security and connectivity
+
+- Use a local `.env` file for credentials and proxy settings; never commit it.
+- Keep TLS certificate verification enabled.
+- The Windows trusted `ROOT` and `CA` certificate stores are loaded for corporate proxy TLS inspection.
+- Use a Vault API access token or another approved production authentication method instead of embedding passwords in scheduled jobs.
+- Do not include session IDs, passwords, proxy credentials, or API tokens in logs, screenshots, manifests, or support tickets.
+
 ### Manual audit trail and annotation export
 
 Before running `zip_creator.py`, complete these Vault steps:
